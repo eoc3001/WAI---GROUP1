@@ -1,0 +1,3 @@
+,runs of 2 ovulatory cycles,false escalations,false escalation rate,expected if independent (miss rate squared),runs of 2 anovulatory cycles,caught,people with Axis 2 at any point
+Step-fit,14.0,0.0,0.0,0.0,0.0,0.0,0.0
+HMM,4.0,1.0,0.25,0.006,1.0,0.0,1.0

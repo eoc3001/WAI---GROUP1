@@ -1,0 +1,5 @@
+model,answer key,cycles,median length,median probability,share unclear,share from LH-only key
+HMM,not ovulated,13,28.0,0.887,0.69,0.62
+HMM,ovulated,97,30.0,0.877,0.87,0.63
+Step-fit,not ovulated,13,28.0,0.892,0.69,0.62
+Step-fit,ovulated,97,30.0,0.887,0.57,0.63

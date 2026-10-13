@@ -1,0 +1,12 @@
+,result
+a. false alarm <= 20% and AUC CI low > 0.60,False
+b. beats the calendar day guess (learned luteal),False
+c. ECE <= 0.10,True
+d. definite answer for >= 70%,False
+family,Step-fit
+K1 end-of-cycle answer,False
+K2 watch day,False
+K3 in-cycle message,False
+K4 Axis 2,False
+period fallback used,True
+notes,"rounds without a diary took period starts from Mira's Menstrual label (matched the diary in 94% / 86% of starts): needs team sign-off, say so in the report | regularity from the label matched the diary for 24 of 25 people | only 13 usable anovulatory cycles (5 by PdG): specificity CIs are wide"
