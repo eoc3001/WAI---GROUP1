@@ -1,8 +1,18 @@
+# --- Data: never commit mcPHASES files or anything built from their rows ---
+data/*
+!data/README.md
+*.csv
+!results/*.csv
+*.parquet
+*.xlsx
+# Model files stay local until a supervisor agrees they can be shared (then: git add -f)
+*.joblib
+
+# --- Python and editor clutter ---
 __pycache__/
-*.pyc
-.ipynb_checkpoints/
-.env
 .venv/
 venv/
-data/raw/
+.ipynb_checkpoints/
 .DS_Store
+.vscode/
+.claude/settings.local.json
