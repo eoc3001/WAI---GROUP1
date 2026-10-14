@@ -6,8 +6,8 @@ window, and feeds cycle context to the agent layer.
 ## Files
 | File | What it does |
 |---|---|
-| `model1_pipeline_v6.py` | Current cycle version: works with the real round layout, LH-only key where no PdG, diary answers saved first |
-| `results/` | Summary scores only (no participant rows or ids) |
+| `model1/model1_pipeline_v6.py` | Current cycle version: works with the real round layout, LH-only key where no PdG, diary answers saved first |
+| `model1/results/` | Summary scores only (no participant rows or ids) |
 
 ## Set up (once)
     python -m venv .venv
@@ -20,9 +20,9 @@ Before your first commit (inside the Git repository):
     nbstripout --install            # clears notebook outputs automatically when you commit
 
 ## Run
-    python build_daily_table.py --raw data/mcphases --inspect     # check real headers first
-    python build_daily_table.py --raw data/mcphases --out data/daily.csv
-    python model1_pipeline.py --data data/daily.csv --repeats 5 --out results/model1_results.json
+    python model1/ build_daily_table.py --raw data/mcphases --inspect     # check real headers first
+    python model1/ build_daily_table.py --raw data/mcphases --out data/daily.csv
+    python model1_pipeline_v6.py --data data/daily.csv --repeats 5 --out results/model1_results.json
 
 
 ## Model
