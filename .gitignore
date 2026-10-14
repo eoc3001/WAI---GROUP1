@@ -2,7 +2,7 @@
 data/*
 !data/README.md
 *.csv
-!results/*.csv
+!model1/results/*.csv
 *.parquet
 *.xlsx
 # Model files stay local until a supervisor agrees they can be shared (then: git add -f)
