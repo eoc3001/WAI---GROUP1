@@ -1,9 +1,13 @@
-pandas>=2.0
 numpy>=1.26
+pandas>=2.0
 scikit-learn>=1.4
 scipy>=1.11
 joblib>=1.3
-ipykernel>=6.29
-nbstripout>=0.7
+xgboost
+matplotlib
+shap
+artifact-tool
 streamlit>=1.50
 altair>=5
+ipykernel>=6.29
+nbstripout>=0.7
