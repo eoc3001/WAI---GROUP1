@@ -1,0 +1,14 @@
+Model 2 flag,cycle lengths,Axis 2: 2 'not seen' in a row,level (Axis 2 ON),level (Axis 2 OFF),why
+False,regular 21-35,False,L0,L0,
+False,regular 21-35,True,INFO,L0,no sign of ovulation in her last 2 answered cycles
+False,outside 21-35 (2 of 3),False,L1,L1,"cycle lengths outside 21-35 days consistently, or fewer than 8 a year"
+False,outside 21-35 (2 of 3),True,L1,L1,"cycle lengths outside 21-35 days consistently, or fewer than 8 a year; no sign of ovulation in her last 2 answered cycles"
+True,regular 21-35,False,L1,L1,Model 2 flag from androgen-related signs
+True,regular 21-35,True,L2,L1,no sign of ovulation in her last 2 answered cycles; Model 2 flag from androgen-related signs
+True,outside 21-35 (2 of 3),False,L2,L2,"cycle lengths outside 21-35 days consistently, or fewer than 8 a year; Model 2 flag (may partly come from her cycle inputs: ask Model 2 for a cycle-neutral flag)"
+True,outside 21-35 (2 of 3),True,L2,L2,"cycle lengths outside 21-35 days consistently, or fewer than 8 a year; no sign of ovulation in her last 2 answered cycles; Model 2 flag (may partly come from her cycle inputs: ask Model 2 for a cycle-neutral flag)"
+no period 90+ days,,,S,S,no period 90+ days
+"Model 2 flag + Axis 2, on the pill",,,L1,L1,"cycle checks paused (hormonal contraception, pregnancy or breastfeeding); Model 2 flag from androgen-related signs"
+"Model 2 flag + Axis 2, 2 years after first period",,,L1,L1,Model 2 flag from androgen-related signs
+"Model 2 flag only from cycle inputs, lengths outside 21-35",,,L1,L1,"cycle lengths outside 21-35 days consistently, or fewer than 8 a year"
+Model 2 flag + scan result entered,,,L2,L2,Model 2 flag from androgen-related signs; polycystic ovaries on a scan she entered

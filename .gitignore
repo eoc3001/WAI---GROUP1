@@ -1,8 +1,18 @@
+# --- Data: never commit raw mcPHASES files or per-person tables ---
+data/*
+!data/processed/
+*.parquet
+*.xlsx
+# Model files stay local until a supervisor agrees they can be shared
+*.joblib
+
+# --- Python and editor clutter ---
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .env
 .venv/
 venv/
-data/raw/
 .DS_Store
+.vscode/
+.claude/settings.local.json

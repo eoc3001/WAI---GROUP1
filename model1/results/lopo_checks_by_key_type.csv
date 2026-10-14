@@ -1,0 +1,5 @@
+,cycles labelled,anovulatory,unclear,coverage,TP,TN,FP,FN,precision,recall,F1,specificity,false alarm,miss rate,AUC,ECE,day err model,day err worst 10%,day within 2,day err calendar (learned),day err calendar 14
+HMM | PdG+LH,41.0,5.0,35.0,0.146,1.0,0.0,1.0,4.0,0.5,0.2,0.286,0.0,1.0,0.111,0.311,0.006,2.0,2.0,1.0,2.0,2.0
+HMM | LH only,69.0,8.0,58.0,0.116,2.0,0.0,3.0,3.0,0.4,0.4,0.4,0.0,1.0,0.052,0.231,0.008,1.75,3.15,0.5,1.0,1.0
+Step-fit | PdG+LH,41.0,5.0,19.0,0.537,20.0,1.0,1.0,0.0,0.952,1.0,0.976,0.5,0.5,0.0,0.656,0.004,5.0,13.1,0.2,1.0,1.0
+Step-fit | LH only,69.0,8.0,45.0,0.304,19.0,0.0,2.0,0.0,0.905,1.0,0.95,0.0,1.0,0.0,0.377,0.012,3.0,8.8,0.211,2.0,2.0
