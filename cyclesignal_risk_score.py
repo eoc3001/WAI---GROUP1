@@ -1,38 +1,3 @@
-"""CycleSignal prototype PCOS Risk Awareness Score (0-100).
-
-Install: pip install numpy pandas scikit-learn
-Place this file in eoc3001/WAI---GROUP1 (or a subdirectory), then run:
-    python cyclesignal_risk_score.py
-    python cyclesignal_risk_score.py --repo-root /path/to/WAI---GROUP1
-    python cyclesignal_risk_score.py --participant-id YOUR_ID --symptoms-json data/my_symptoms.json
-
-Symptom JSON format (replace example values with the same person's inputs):
-    {"participant_id": "YOUR_ID", "features": {"Age": 28, "BMI": 27.5,
-     "Weight gain": 1, "hair growth": 1, "Skin darkening": 0, "Hair loss": 1,
-     "Pimples": 1, "Fast food": 1, "Reg.Exercise": 0}}
-
-Model 1 is read from data/cycle_handoff_v6.csv or
-model1/data/cycle_handoff_v6.csv. No participant is selected automatically.
-Running without arguments evaluates Model 2, then prints simulated combined
-profiles using separate existing cycle and symptom rows. No manual input or
-manual output handling is needed. These are NOT scores for actual participants.
-Demo JSON is saved to results/cyclesignal_demo_scores.json on every demo run
-(replacing the previous demo export). Use --output-json to choose another path.
-Use --demo-count 5 for a smaller demo, --evaluate-only for Model 2 metrics,
-or --interactive for same-person symptom entry. Existing JSON input remains optional.
-
-Reads data/processed/pcos_model2_selected_features.csv. No cycle variables
-enter Model 2. Evaluation uses a stratified, held-out 20% test set and a
-0.50 classifier threshold. The returned model remains fitted ONLY on the
-training partition; the test partition is never used for fitting.
-
-The Model 1 mapping, 40/60 weights, and display bands are project heuristics,
-not clinically validated thresholds. Neither Extra Trees output nor the
-combined score is a calibrated probability of disease or a diagnosis.
-An unknown cycle history receives the requested fallback of 20; this is
-not evidence of low risk. Low scores cannot rule out PCOS.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -46,6 +11,8 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.impute import SimpleImputer
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.metrics import (
     accuracy_score, confusion_matrix, f1_score, precision_score,
     recall_score, roc_auc_score,
@@ -56,14 +23,14 @@ from sklearn.utils.validation import check_is_fitted
 
 
 FEATURES = (
-    "Age", "BMI", "Weight gain", "hair growth", "Skin darkening",
+    "Age", "BMI", "Cycle(R/I)", "Cycle length(days)", "Weight gain", "hair growth", "Skin darkening",
     "Hair loss", "Pimples", "Fast food", "Reg.Exercise",
 )
-BINARY_FEATURES = FEATURES[2:]
+BINARY_FEATURES = FEATURES[4:]
 DATA_PATH = Path("data/processed/pcos_model2_selected_features.csv")
 WARNING = (
     "Prototype risk-awareness score only: not a probability of disease or "
-    "a diagnosis. Weights and bands have not been clinically validated. "
+    "a diagnosis. The 40/60 weights and bands are illustrative, not learned or clinically validated. Model 2 already includes cycle inputs, so cycle information overlaps. "
     "A low score does not rule out PCOS. Discuss concerning symptoms or "
     "cycle changes with a qualified healthcare professional."
 )
@@ -93,14 +60,18 @@ def _validate_features(frame: pd.DataFrame, *, allow_missing: bool) -> pd.DataFr
     missing = set(FEATURES) - set(frame.columns)
     if missing:
         raise ValueError(f"Missing required features: {sorted(missing)}")
-    # Explicit allow-list prevents accidental inclusion of cycle or target data.
+    # Explicit allow-list excludes lab, ultrasound and target data.
     values = frame.loc[:, list(FEATURES)].apply(pd.to_numeric, errors="raise")
     if np.isinf(values.to_numpy(dtype=float)).any():
         raise ValueError("Features must not contain infinity.")
     if not allow_missing and values.isna().any().any():
-        raise ValueError("All nine features are required for scoring.")
+        raise ValueError("All eleven features, including cycle category and cycle length, are required for scoring.")
     if (values[["Age", "BMI"]] <= 0).any().any():
         raise ValueError("Age and BMI must be positive.")
+    if not values["Cycle(R/I)"].dropna().isin([2, 4, 5]).all():
+        raise ValueError("Cycle(R/I) must use the training dataset codes 2, 4 or 5; do not infer codes from regularity.")
+    if (values["Cycle length(days)"].dropna() < 0).any():
+        raise ValueError("Cycle length(days) must be nonnegative and use the training dataset definition.")
     for name in BINARY_FEATURES:
         if not values[name].dropna().isin([0, 1]).all():
             raise ValueError(f"{name} must use 0=no, 1=yes.")
@@ -156,9 +127,9 @@ def train_and_evaluate_model2(
     repo_root: str | Path | None = None, *, target_column: str = "PCOS",
     random_state: int = 42,
 ) -> tuple[Pipeline, dict]:
-    """Train cycle-neutral Extra Trees and report held-out performance.
+    """Train the final eleven-feature Extra Trees pipeline and evaluate it.
 
-    Missing training predictors are median-imputed within the training split.
+    Preprocessing and classifier settings match src/build_pcos_model2.py.
     Missing targets, nonnumeric predictors and invalid binary codes fail fast.
     No tuning is performed on the test set. This evaluates Model 2 only;
     the combined longitudinal score requires separate external validation.
@@ -179,10 +150,24 @@ def train_and_evaluate_model2(
     )
     if X_train.isna().all().any():
         raise ValueError("A training feature has no observed values.")
+    preprocess = ColumnTransformer([
+        ("num", Pipeline([
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]), ["Age", "BMI", "Cycle length(days)"]),
+        ("cat", Pipeline([
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+        ]), ["Cycle(R/I)"]),
+        ("bin", Pipeline([
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+        ]), list(BINARY_FEATURES)),
+    ], sparse_threshold=0)
     model = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
+        ("preprocess", preprocess),
         ("classifier", ExtraTreesClassifier(
-            n_estimators=500, random_state=random_state, n_jobs=-1,
+            n_estimators=500, min_samples_leaf=2, class_weight="balanced",
+            random_state=random_state,
         )),
     ])
     model.fit(X_train, y_train)
@@ -198,7 +183,7 @@ def train_and_evaluate_model2(
         "f1": float(f1_score(y_test, predictions, zero_division=0)),
         "roc_auc": float(roc_auc_score(y_test, probabilities)),
         "confusion_matrix_labels_0_1": confusion_matrix(y_test, predictions, labels=[0, 1]).tolist(),
-        "scope": "Held-out Model 2 only; combined score is not validated.",
+        "scope": "Held-out final eleven-feature Extra Trees Model 2 only. Combined score and 40/60 weights are not validated; cycle information overlaps between components.",
     }
     return model, metrics
 
@@ -207,7 +192,7 @@ def calculate_model2_symptom_score(model: Pipeline, user_features: Mapping) -> f
     """Return positive-class Extra Trees output x100, not disease probability."""
     check_is_fitted(model)
     if list(model.feature_names_in_) != list(FEATURES):
-        raise ValueError("Model must be trained on exactly the nine cycle-neutral features in order.")
+        raise ValueError("Model must be trained on exactly the eleven final Model 2 features in order.")
     frame = _validate_features(pd.DataFrame([dict(user_features)]), allow_missing=False)
     classes = list(model.classes_)
     if set(classes) != {0, 1}:
@@ -223,7 +208,7 @@ def calculate_cyclesignal_score(
     axis1_pattern: bool = False, axis1_infrequent: bool = False,
     no_period_90: bool = False,
 ) -> dict:
-    """Combine 40% cycle pattern + 60% symptom signal and return display data.
+    """Combine 40% cycle pattern + 60% full Model 2 profile signal and return display data.
 
     Bands are continuous intervals [0,30), [30,50), [50,70), [70,100].
     Classify the displayed one-decimal score so the label matches the display.
@@ -308,7 +293,8 @@ SIMULATION_NOTICE = (
     "people in separate datasets. Pairing is arbitrary and reproducible; "
     "this is not a real participant assessment or validation of combined accuracy. "
     "Symptom rows may have been used to train Model 2. Source diagnosis labels "
-    "are not labels for these simulated profiles."
+    "are not labels for these simulated profiles. Model 2 cycle inputs come from "
+    "its source row and may disagree with the independently paired Model 1 profile."
 )
 
 
@@ -318,8 +304,9 @@ def calculate_simulated_combined_scores(
 ) -> dict:
     """Pair each saved cycle profile with a shuffled existing symptom profile.
 
-    No identity matching is claimed. Labels and cycle columns from Model 2's
-    dataset are never used to pair profiles or calculate combined scores.
+    No identity matching is claimed. Diagnosis labels never enter scoring or
+    pairing. Model 2 uses its source row's cycle predictors; these need not
+    agree with the independently paired Model 1 cycle profile.
     Results remain in memory; no participant data or files are written.
     """
     root = find_repository_root(repo_root)
@@ -376,6 +363,33 @@ def calculate_simulated_combined_scores(
     }
 
 
+def canonical_model2_evaluation(repo_root: str | Path) -> dict:
+    """Read the saved final benchmark for comparison with a fresh evaluation."""
+    root = Path(repo_root)
+    benchmark = pd.read_csv(root / "results/metrics/four_model_benchmark.csv")
+    rows = benchmark.loc[benchmark["Model"] == "Extra Trees"]
+    if len(rows) != 1:
+        raise ValueError("Expected exactly one final Extra Trees benchmark row.")
+    row = rows.iloc[0]
+    columns = pd.read_csv(root / DATA_PATH, nrows=0).columns
+    features = [name for name in columns if name != "PCOS (Y/N)"]
+    tn, fp, fn, tp = (int(row[name]) for name in ("TN", "FP", "FN", "TP"))
+    test_rows = tn + fp + fn + tp
+    return {
+        "training_rows": len(pd.read_csv(root / DATA_PATH)) - test_rows,
+        "test_rows": test_rows,
+        "features": features,
+        "threshold": 0.5,
+        "accuracy": float(row["Test Accuracy"]),
+        "precision": float(row["Test Precision"]),
+        "recall": float(row["Test Recall"]),
+        "f1": float(row["Test F1"]),
+        "roc_auc": float(row["Test ROC-AUC"]),
+        "confusion_matrix_labels_0_1": [[tn, fp], [fn, tp]],
+        "scope": "Canonical final 11-feature Extra Trees held-out evaluation at threshold 0.5; source: results/metrics/four_model_benchmark.csv. The demo now uses the same eleven-feature pipeline. Combined score and 40/60 weights are not validated; cycle information overlaps between components.",
+    }
+
+
 def save_simulated_scores_json(simulation: dict, evaluation: dict,
                                repo_root: str | Path, output_path=None) -> Path:
     """Save bot-readable demo data, including warnings and Model 2 evaluation.
@@ -424,7 +438,8 @@ def prompt_for_participant_inputs(root: Path, handoff_path=None, participant_id=
     cycle_outputs = load_model1_cycle_outputs(root, participant_id, handoff_path)
     print("\nSelected participant's Model 1 inputs:")
     print(json.dumps(cycle_outputs, indent=2))
-    print("Enter symptoms for this SAME person. Binary answers: 0=no, 1=yes.")
+    print("Enter all eleven Model 2 inputs for this SAME person. Binary answers: 0=no, 1=yes.")
+    print("Cycle(R/I) requires dataset codes 2/4/5. Cycle length(days) must match the training definition; do not substitute wearable cycle intervals without checking compatibility.")
     print("If those inputs are unavailable, cancel with Ctrl+C; do not substitute training rows.")
     symptoms = {}
     for feature in FEATURES:
@@ -436,7 +451,11 @@ def prompt_for_participant_inputs(root: Path, handoff_path=None, participant_id=
                     raise ValueError
                 if feature in BINARY_FEATURES and value not in (0, 1):
                     raise ValueError
-                if feature not in BINARY_FEATURES and value <= 0:
+                if feature in ("Age", "BMI") and value <= 0:
+                    raise ValueError
+                if feature == "Cycle(R/I)" and value not in (2, 4, 5):
+                    raise ValueError
+                if feature == "Cycle length(days)" and value < 0:
                     raise ValueError
             except ValueError:
                 print("Enter 0 or 1." if feature in BINARY_FEATURES else "Enter a positive number.")
@@ -464,8 +483,10 @@ if __name__ == "__main__":
     try:
         root = find_repository_root(args.repo_root)
         classifier, evaluation = train_and_evaluate_model2(root, target_column=args.target_column)
-        print("\nHeld-out Model 2 evaluation:")
+        print("\nFresh held-out final eleven-feature Extra Trees evaluation:")
         print(json.dumps(evaluation, indent=2))
+        print("\nCanonical final 11-feature Model 2 evaluation:")
+        print(json.dumps(canonical_model2_evaluation(root), indent=2))
         if args.evaluate_only:
             parser.exit(0)
         if args.symptoms_json is None and not args.interactive and args.participant_id is None:
@@ -509,3 +530,4 @@ if __name__ == "__main__":
         parser.exit(1, "\nCancelled. No combined score calculated; no inputs saved.\n")
     except (OSError, ValueError) as exc:
         parser.exit(1, f"Cannot calculate CycleSignal score: {exc}\n")
+
