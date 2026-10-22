@@ -9,5 +9,6 @@ shap
 artifact-tool
 streamlit>=1.50
 altair>=5
+anthropic
 ipykernel>=6.29
 nbstripout>=0.7
