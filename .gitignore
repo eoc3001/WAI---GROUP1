@@ -16,3 +16,7 @@ venv/
 .DS_Store
 .vscode/
 .claude/settings.local.json
+
+# --- Secrets: never commit ---
+**/.streamlit/secrets.toml
+*.key

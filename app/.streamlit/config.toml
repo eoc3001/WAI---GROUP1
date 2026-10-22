@@ -1,0 +1,31 @@
+# Lives next to the app so it loads wherever Streamlit is started from.
+# Secrets go in app/.streamlit/secrets.toml (git-ignored).
+[client]
+showErrorDetails = "none"      # visitors never see stack traces or file paths
+toolbarMode = "minimal"        # hide developer options
+
+[server]
+enableCORS = true              # only this site may call the app
+enableXsrfProtection = true    # block cross-site form submissions
+maxUploadSize = 1              # the app takes no uploads
+
+[browser]
+gatherUsageStats = false
+
+# CycleSignal brand (matches the slides): blush/lilac, deep plum text, raspberry accent
+[theme]
+base = "light"
+primaryColor = "#a8336a"
+backgroundColor = "#fdf5f8"
+secondaryBackgroundColor = "#f6eefa"
+textColor = "#34203a"
+linkColor = "#6d5899"
+borderColor = "#f0dce7"
+font = "DM Sans:https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap"
+headingFont = "DM Sans:https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap"
+headingFontWeights = 700
+baseRadius = "12px"
+chartCategoricalColors = ["#a8336a", "#6d5899", "#d0658f", "#c9b6ea"]
+
+[theme.sidebar]
+backgroundColor = "#f8eef6"
