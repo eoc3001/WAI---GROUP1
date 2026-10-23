@@ -214,13 +214,16 @@ def prototype():
             if score["cycle_follow_up"] or reading["level"] == "S":
                 st.error("No period logged for 90+ days. Please see a doctor, whatever the score.")
         with c2:
-            split = pd.DataFrame({"part": ["Cycle pattern (40%)", "Check-in answers (60%)"],
+            split = pd.DataFrame({"part": ["Cycle pattern (40%)", "Check-in answers (60%)"], "order": [0, 1],
                                   "points": [reading["cycle_points"], reading["symptom_points"]],
                                   "detail": [f"Model 1 cycle score {score['model1_cycle_score']:.0f}/100",
                                              f"Model 2 profile score {score['model2_symptom_score']:.1f}/100"]})
             chart(alt.Chart(split).mark_bar(size=34).encode(
                 x=alt.X("points:Q", stack="zero", scale=alt.Scale(domain=[0, 100]), title="Points in your score"),
-                color=alt.Color("part:N", scale=alt.Scale(range=[RASPBERRY, PURPLE]), legend=alt.Legend(orient="bottom", title=None)),
+                color=alt.Color("part:N", sort=list(split["part"]),
+                                scale=alt.Scale(domain=list(split["part"]), range=[RASPBERRY, PURPLE]),
+                                legend=alt.Legend(orient="bottom", title=None)),
+                order=alt.Order("order:Q"),
                 tooltip=["part", "points", "detail"]).properties(height=150))
         st.subheader("What moved your check-in score")
         st.caption(f"Each bar is how much one answer moved your check-in score from the model's average of "

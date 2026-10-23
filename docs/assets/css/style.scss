@@ -1,0 +1,20 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+// CycleSignal brand on top of the Slate theme: plum and raspberry instead of grey
+#header_wrap .outer {
+  background: linear-gradient(135deg, #34203a 0%, #6d3a5f 55%, #a8336a 100%);
+}
+#project_title { font-family: "DM Sans", "Myriad Pro", sans-serif; }
+#project_tagline { color: #f7dceb; }
+#main_content h1, #main_content h2, #main_content h3 { color: #34203a; }
+#main_content h2 { border-bottom-color: #f0dce7; }
+#main_content a { color: #a8336a; }
+#main_content img { border-radius: 10px; box-shadow: 0 2px 10px rgba(52, 32, 58, 0.12); }
+#main_content table th { background: #f8eef6; }
+#footer_wrap .outer { background: #34203a; }
+.callout {
+  background: #f8eef6; border-left: 4px solid #a8336a; padding: 12px 16px; margin: 16px 0; border-radius: 6px;
+}

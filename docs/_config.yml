@@ -1,0 +1,6 @@
+# GitHub Pages site for the CycleSignal project blog.
+# Settings > Pages > Deploy from a branch > main, folder /docs
+theme: jekyll-theme-slate
+title: CycleSignal
+description: AI powered cycle tracking for earlier PCOS risk awareness
+show_downloads: false
