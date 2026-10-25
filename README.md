@@ -19,3 +19,30 @@ Model 1 is trained on real wearable data (heart rate, temperature, sleep) paired
 Model 2 is trained on real clinical PCOS patient data to learn what a PCOS-risk profile tends to look like, using features a person can realistically self-report (cycle length, weight/BMI, symptoms like hair growth or acne) rather than lab-only measurements.
 The connection: Model 1's daily tracking is used to calculate an actual cycle-length pattern over time, which becomes one of the inputs to Model 2, alongside self-reported weight/symptoms, and optionally lab data if the user has it (for a more confident reading).
 The output for the user: an indication of where they are in their cycle, plus a flag if their pattern suggests it's worth watching for PCOS symptoms and consulting a doctor.
+
+## Links
+
+- **Project blog:** https://eoc3001.github.io/WAI---GROUP1/
+- **Demo app:** https://wai---group1-iwvd7wox6mmmbwhs2kxkyd.streamlit.app/ (password on request)
+
+## Repository structure
+
+| Folder | What's inside |
+|---|---|
+| [`model1/`](model1/) | **Model 1:** wearable cycle tracking from mcPHASES (`build_daily_table.py`, `model1_pipeline_v6.py`) and its summary results |
+| [`model2/`](model2/) | **Model 2:** PCOS risk profile: input data, four-model benchmark (`build_pcos_model2.py`), metrics and figures |
+| [`combined_score/`](combined_score/) | **Model 1 + Model 2:** the 0-100 CycleSignal risk-awareness score (`cyclesignal_risk_score.py`) |
+| [`agent/`](agent/) | **Agent layer:** escalation level, the assistant (Claude or offline) and the trusted reading list |
+| [`app/`](app/) | **Demo app:** Streamlit prototype bringing everything together ([how to run](app/README.md)) |
+| [`docs/`](docs/) | **Project blog** (GitHub Pages) |
+| [`assets/`](assets/) | Logo files |
+
+### Run each part (from the repository root)
+
+```bash
+pip install -r requirements.txt
+python model2/build_pcos_model2.py                      # Model 2: retrain and save metrics/figures
+python combined_score/cyclesignal_risk_score.py         # Model 1 + Model 2: evaluate and print demo scores
+streamlit run app/cyclesignal_app.py                    # Demo app
+```
+Model 1 needs the mcPHASES files on your laptop in `data/` (never committed); see [model1/README.md](model1/README.md).

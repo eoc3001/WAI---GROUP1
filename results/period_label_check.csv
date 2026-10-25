@@ -1,7 +1,0 @@
-,value
-diary starts checked,111
-diary starts with a label start within 2 days,104
-label starts checked,121
-label starts with a diary start within 2 days,104
-"median offset (label minus diary, days)",-1.0
-label trusted for rounds without a diary,True

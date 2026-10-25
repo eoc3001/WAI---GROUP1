@@ -25,7 +25,7 @@ USE_SYNTHETIC = False                 # True = simulated people (safe anywhere).
 DATA_FILE = "data/daily.csv"          # from: python build_daily_table.py --raw data/mcphases --out data/daily.csv
 RAW_DIR = Path("data/mcphases")       # only used if daily.csv has no lh/pdg columns
 SYNTH_LAYOUT = "mcphases"             # simulated data copies the real layout ("full" = every source in every round)
-OUT = Path("results/synthetic" if USE_SYNTHETIC else "results")      # summary tables, safe to commit
+OUT = Path(__file__).resolve().parent / ("results/synthetic" if USE_SYNTHETIC else "results")  # summary tables in model1/results, safe to commit
 HANDOFF = Path("data/cycle_handoff_v6" + ("_synthetic" if USE_SYNTHETIC else "") + ".csv")  # per person, stays local
 
 # Validation (team agreement 30 Sep: 80/20 by participant; five seeds so one lucky split can't decide)

@@ -35,7 +35,7 @@ Then switch on **Agent uses Claude** in the sidebar.
   questions. Over the limit, the offline assistant answers instead.
 - Questions are capped at 300 characters, with HTML and control characters stripped.
   Any links in Claude's answers are removed; the reading list is added by the app from
-  `app/resources.py`.
+  `agent/resources.py`.
 - `app/.streamlit/config.toml` hides error details from visitors and keeps cross-site
   request protection on.
 - Set a monthly spend limit in the Anthropic Console as the final backstop.
@@ -55,20 +55,20 @@ a package that doesn't exist on PyPI).
 | File | What it does |
 |---|---|
 | `app/cyclesignal_app.py` | The app: Prototype (today) and Vision (concept) modes |
-| `app/cyclesignal_core.py` | Cycle flags (Model 1 rules), per-person SHAP, agent level, facts for the assistant |
-| `app/agent.py` | The assistant: Claude or offline explainer, both limited to the facts |
-| `app/resources.py` | Checked reading links (WHO, HSE, NHS, Jean Hailes, 2023 guideline) |
+| `app/cyclesignal_core.py` | Cycle flags (Model 1 rules), the combined reading, per-person SHAP, facts for the assistant |
+| `agent/assistant.py` | The assistant: Claude or offline explainer, both limited to the facts |
+| `agent/levels.py` | Escalation level (S / L2 / L1 / INFO / L0), mirroring Model 1's rule |
+| `agent/resources.py` | Checked reading links (WHO, HSE, NHS, Jean Hailes, 2023 guideline) |
 | `app/security.py` | Secrets, password gate, rate limits, input/output cleaning |
-| `demo/VIDEO_SCRIPTS.md` | Shot-by-shot scripts for the two demo videos |
 
 ## What is real and what is not
 
 | Part | Status |
 |---|---|
-| Model 2 check-in score (11 inputs, incl. self-reported regularity and period length), held-out metrics | Real (`cyclesignal_risk_score.py`) |
+| Model 2 check-in score (11 inputs, incl. self-reported regularity and period length), held-out metrics | Real (`combined_score/cyclesignal_risk_score.py`) |
 | 40/60 combined score and bands | Real code; weights are project heuristics, not clinically validated |
 | Cycle flags (FIGO regularity, 21-35 day rule, < 8 a year, 90 days) | Real rules from `model1/model1_pipeline_v6.py` |
-| Assistant level (S / L2 / L1 / INFO / L0) | Mirror of `agent_level` in Model 1 (keep in sync) |
+| Assistant level (S / L2 / L1 / INFO / L0) | `agent/levels.py`, mirror of `agent_level` in Model 1 (keep in sync) |
 | Per-person explanations | Real SHAP on the fitted Extra Trees model |
 | Wearable nights on the Watch tab | Simulated in the shape of mcPHASES (per-person rows can't ship) |
 | Personas (Sarah, Aoife) | Fictional |

@@ -1,4 +1,4 @@
-"""CycleSignal agent layer: explains a reading and answers follow-up questions.
+"""CycleSignal assistant: explains a reading and answers follow-up questions.
 
 The agent only ever sees facts_for_agent(reading): numbers produced by Model 1 rules,
 Model 2, SHAP and the agent level. It never sees raw training data and is told not to

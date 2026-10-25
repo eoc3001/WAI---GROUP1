@@ -27,11 +27,12 @@ import pandas as pd
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))     # repo root, for agent/
 
 import brand  # noqa: E402
-import resources  # noqa: E402
 import security  # noqa: E402
-from agent import OfflineAgent, make_agent  # noqa: E402
+from agent import resources  # noqa: E402
+from agent.assistant import OfflineAgent, make_agent  # noqa: E402
 from cyclesignal_core import (  # noqa: E402
     BINARY_FEATURES, FEATURES, IRREGULAR, LABELS, REGULAR, SymptomExplainer, answer_text, assess,
     facts_for_agent, load_model,
@@ -44,10 +45,17 @@ security.require_password()
 # Brand palette (matches the CycleSignal slides)
 INK, RASPBERRY, PURPLE, ROSE, GREY = "#34203a", "#a8336a", "#6d5899", "#d0658f", "#9a8a9c"
 AVATARS = {"user": ":material/person:", "assistant": ":material/favorite:"}
-BAND_COLOURS = {"Low pattern signal": PURPLE, "Some patterns to monitor": "#a07cc5",
-                "Increased pattern signal": ROSE, "Elevated pattern signal": RASPBERRY}
+BAND_COLOURS = brand.BAND_COLOURS
 LEVEL_TEXT = {"S": "See a doctor", "L2": "Worth discussing with a doctor soon",
               "L1": "Worth keeping an eye on", "INFO": "Note only", "L0": "Nothing to act on"}
+REASON_TEXT = {  # agent_level reasons, in plain words
+    "cycle lengths outside 21-35 days consistently, or fewer than 8 a year": "your cycles are consistently outside 21-35 days",
+    "Model 2 flag from androgen-related signs": "your check-in shows several androgen-related signs",
+    "no period 90+ days": "no period logged for 90+ days",
+    "no sign of ovulation in her last 2 answered cycles": "no sign of ovulation in your last 2 cycles",
+    "polycystic ovaries on a scan she entered": "a scan you entered showed polycystic ovaries",
+    "cycle checks paused (hormonal contraception, pregnancy or breastfeeding)": "cycle checks are paused",
+}
 
 # Demo personas (fictional). temp_missing = cycles with no clear temperature rise.
 PERSONAS = {
@@ -135,15 +143,17 @@ def prototype():
     model, explainer, metrics = get_model()
     p = PERSONAS[st.session_state.persona]
 
-    brand.hero("User demo", "CycleSignal", "AI powered cycle tracking for earlier PCOS risk awareness")
-    brand.callout("Our idea: help someone notice the pattern and take it to a GP.")
+    brand.topbar("Prototype · not a diagnosis",
+                 "AI powered cycle tracking for earlier PCOS risk awareness. "
+                 "Notice the pattern, understand why, and take it to a GP.")
 
     tabs = st.tabs(["1 · Watch", "2 · Log", "3 · Score", "4 · Assistant", "5 · What-if", "6 · Doctor summary"])
 
     # ----- 1. watch
     with tabs[0]:
         lengths = parse_lengths(st.session_state.lengths)
-        st.subheader("What the watch records overnight")
+        brand.section("What the watch records overnight",
+                      "Fitbit-style overnight skin temperature. Pink bars are logged period days.")
         if not lengths:
             st.info("No complete cycles yet. The watch is recording; cycle patterns appear after your first periods are logged.")
         else:
@@ -155,11 +165,10 @@ def prototype():
                 y=alt.Y("temp_dev:Q", title="Skin temperature vs your baseline (°C)", scale=alt.Scale(domain=[-0.3, 0.6])),
                 tooltip=["cycle", "cycle_day", "temp_dev", "rhr"])
             chart((period + temp).resolve_scale(y="independent").properties(height=320))
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Nights recorded", len(nights))
-            c2.metric("Cycles", len(lengths))
             missing = sum(1 for o in p["ovulated"][:len(lengths)] if not o)
-            c3.metric("No clear temperature rise", f"{missing} of {len(lengths)} cycles")
+            brand.tiles([("Nights recorded", str(len(nights)), "overnight readings"),
+                         ("Cycles", str(len(lengths)), ", ".join(map(str, lengths)) + " days"),
+                         ("No clear temperature rise", f"{missing} of {len(lengths)}", "context only, not scored")])
             st.caption("Pink bars = logged period days. Model 1 uses overnight temperature to estimate cycle phase. "
                        "Its ovulation check did not pass validation in our data, so temperature is shown as context "
                        "and is not part of the score. Simulated nights in the shape of the mcPHASES dataset.")
@@ -168,7 +177,7 @@ def prototype():
     with tabs[1]:
         left, right = st.columns(2)
         with left:
-            st.subheader("Period log")
+            brand.section("Period log")
             st.text_input("Completed cycle lengths (days, oldest first)", key="lengths",
                           help="From the period days you tap in the diary.")
             st.number_input("Days since your last period started", 0, 400, key="days")
@@ -177,7 +186,7 @@ def prototype():
                        "If the assistant uses Claude, your score and answers (never your name) are sent to "
                        "Anthropic to write the explanation.")
         with right:
-            st.subheader("Monthly check-in")
+            brand.section("Monthly check-in")
             a, b = st.columns(2)
             a.number_input("Age", 15, 55, key="Age")
             b.number_input("BMI", 14.0, 60.0, step=0.1, key="BMI")
@@ -200,46 +209,25 @@ def prototype():
 
     # ----- 3. score
     with tabs[2]:
-        c1, c2 = st.columns([1, 2])
-        with c1:
-            colour = BAND_COLOURS[score["band"]]
-            # HTML built only from app values (fixed band names and numbers), never user text
-            st.markdown(f"<div style='font-size:64px;font-weight:700;color:{colour};line-height:1'>{score['score']}"
-                        f"<span style='font-size:22px;color:{GREY}'> / 100</span></div>"
-                        f"<div style='font-size:20px;color:{colour};margin-bottom:8px'>{score['band']}</div>",
-                        unsafe_allow_html=True)
-            st.markdown(f"**Assistant level:** {LEVEL_TEXT[reading['level']]}")
-            if score["history_note"]:
-                st.warning("Low confidence: not enough cycle history yet. " + score["history_note"])
-            if score["cycle_follow_up"] or reading["level"] == "S":
-                st.error("No period logged for 90+ days. Please see a doctor, whatever the score.")
-        with c2:
-            split = pd.DataFrame({"part": ["Cycle pattern (40%)", "Check-in answers (60%)"], "order": [0, 1],
-                                  "points": [reading["cycle_points"], reading["symptom_points"]],
-                                  "detail": [f"Model 1 cycle score {score['model1_cycle_score']:.0f}/100",
-                                             f"Model 2 profile score {score['model2_symptom_score']:.1f}/100"]})
-            chart(alt.Chart(split).mark_bar(size=34).encode(
-                x=alt.X("points:Q", stack="zero", scale=alt.Scale(domain=[0, 100]), title="Points in your score"),
-                color=alt.Color("part:N", sort=list(split["part"]),
-                                scale=alt.Scale(domain=list(split["part"]), range=[RASPBERRY, PURPLE]),
-                                legend=alt.Legend(orient="bottom", title=None)),
-                order=alt.Order("order:Q"),
-                tooltip=["part", "points", "detail"]).properties(height=150))
-        st.subheader("What moved your check-in score")
-        st.caption(f"Each bar is how much one answer moved your check-in score from the model's average of "
-                   f"{reading['symptom_base_points']:.0f}, for you specifically (SHAP). Faded bars = training-data quirk, not advice.")
-        d = reading["drivers"].copy()
-        d["direction"] = np.where(d["symptom_points"] >= 0, "raised", "lowered")
-        d["answer"] = [answer_text(f, v) for f, v in zip(d.feature, d.value)]
-        d["name"] = d["label"] + " (" + d["answer"] + ")"
-        bars = alt.Chart(d).mark_bar().encode(
-            y=alt.Y("name:N", sort=list(d["name"]), title=None, axis=alt.Axis(labelLimit=320, labelFontSize=13)),
-            x=alt.X("symptom_points:Q", title="Effect on check-in score (points)"),
-            color=alt.Color("direction:N", scale=alt.Scale(domain=["raised", "lowered"], range=[ROSE, PURPLE]), legend=None),
-            opacity=alt.condition("datum.counterintuitive", alt.value(0.35), alt.value(1)),
-            tooltip=["label", "answer", alt.Tooltip("symptom_points:Q", format=".1f"), "counterintuitive"])
-        chart(bars.properties(height=300))
-        st.caption(score["warning"])
+        reasons = [REASON_TEXT.get(r, r) for r in reading["level_reasons"]]
+        why = ("Because " + " and ".join(reasons) + ".") if reasons else "Nothing in your logs needs action right now."
+        notes = []
+        if score["history_note"]:
+            notes.append(("warn", "Low confidence: not enough cycle history yet, so a cautious placeholder is used."))
+        if score["cycle_follow_up"] or reading["level"] == "S":
+            notes.append(("stop", "No period logged for 90+ days. Please see a doctor, whatever the score."))
+        brand.score_card(score["score"], score["band"], LEVEL_TEXT[reading["level"]], why,
+                         reading["cycle_points"], reading["symptom_points"],
+                         f"cycle score {score['model1_cycle_score']:.0f}/100",
+                         f"profile score {score['model2_symptom_score']:.0f}/100", notes)
+        brand.section("Why: what moved your check-in score",
+                      f"How much each of your answers moved your check-in score from the model's average of "
+                      f"{reading['symptom_base_points']:.0f}, for you specifically (SHAP). Right = raised it, left = lowered it.")
+        brand.drivers([{"label": r.label, "answer": answer_text(r.feature, r.value),
+                        "points": float(r.symptom_points), "quirk": bool(r.counterintuitive)}
+                       for r in reading["drivers"].itertuples()])
+        st.caption("Faded rows marked “data quirk” move the score in a direction that reflects the training data, "
+                   "not medical knowledge. " + score["warning"])
 
     # ----- 4. assistant
     with tabs[3]:
@@ -294,8 +282,8 @@ def prototype():
 
     # ----- 5. what-if
     with tabs[4]:
-        st.subheader("What if something changed?")
-        st.caption("See which of your inputs move the result. This shows how the model behaves, not a treatment plan.")
+        brand.section("What if something changed?",
+                      "See which of your inputs move the result. This shows how the model behaves, not a treatment plan.")
         a, b = st.columns(2)
         changes = {}
         for i, f in enumerate(BINARY):
@@ -304,11 +292,10 @@ def prototype():
             changes[f] = int(new)
         wi = assess(model, explainer, features | changes, lengths, st.session_state.days,
                     st.session_state.paused, temp_missing)
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Your score now", score["score"])
-        c2.metric("What-if score", wi["score"]["score"], round(wi["score"]["score"] - score["score"], 1), delta_color="inverse")
-        c3.markdown(f"What-if band  \n**<span style='color:{BAND_COLOURS[wi['score']['band']]};font-size:22px'>"
-                    f"{wi['score']['band']}</span>**", unsafe_allow_html=True)
+        delta = round(wi["score"]["score"] - score["score"], 1)
+        brand.tiles([("Your score now", f"{score['score']:.1f}", score["band"]),
+                     ("What-if score", f"{wi['score']['score']:.1f}", f"{delta:+.1f} points"),
+                     ("What-if band", wi["score"]["band"].replace(" pattern signal", ""), "pattern signal")])
         if any(wi["drivers"]["counterintuitive"] & (wi["drivers"]["symptom_points"].abs() >= 1)):
             st.info("Some inputs move the score in a direction that reflects the training data, not medical knowledge. "
                     "Don't read those as advice.")
@@ -337,14 +324,15 @@ def prototype():
         st.download_button("Download summary", summary, file_name="cyclesignal_summary.md", type="primary")
 
     with st.sidebar.expander("Model facts"):
-        st.write(f"Model 2 (Extra Trees, 9 self-reportable inputs) held-out test, n={metrics['test_rows']}:")
+        st.write(f"Model 2 (Extra Trees, 11 self-reportable inputs) held-out test, n={metrics['test_rows']}:")
         st.write(f"ROC-AUC {metrics['roc_auc']:.2f} · recall {metrics['recall']:.2f} · precision {metrics['precision']:.2f}")
         st.caption("Combined score weights (40/60) and bands are project heuristics, not clinically validated.")
     brand.footer()
 
 
 def vision():
-    brand.hero("The vision", "CycleSignal", "What it could do with the right data, from the right people")
+    brand.topbar("Concept · illustrative data", "What CycleSignal could do with the right data, from the right people.",
+                 concept=True)
     st.warning("**Concept, illustrative data only.** These screens show what CycleSignal could do once it is "
                "trained and validated on wearable, symptom and diagnosis data from the same people. "
                "No number on this page comes from a real model.")
@@ -360,7 +348,7 @@ def vision():
     order = list(months["m"])
     t1, t2, t3, t4 = st.tabs(["Timeline", "Rotterdam tracker", "Labs & scan", "Clinician view"])
     with t1:
-        st.subheader("Nine months of Sarah's data, one person, end to end")
+        brand.section("Nine months of Sarah's data, one person, end to end")
         band = alt.Chart(months).mark_area(color=RASPBERRY, opacity=0.18).encode(x=alt.X("m:O", sort=order, title=None, axis=alt.Axis(labelAngle=0)), y="low:Q", y2="high:Q")
         line = alt.Chart(months).mark_line(color=RASPBERRY, point=True).encode(
             x=alt.X("m:O", sort=order), y=alt.Y("score:Q", title="Calibrated likelihood (%) with 90% interval", scale=alt.Scale(domain=[0, 100])))
@@ -373,14 +361,14 @@ def vision():
         st.caption("Dashed lines = 21 and 35 days. Ovulation from a validated watch detector plus optional LH strips. Vision: a validated ovulation detector turns temperature into real evidence, and the score becomes a "
                    "calibrated likelihood with an honest uncertainty interval.")
     with t2:
-        st.subheader("Rotterdam criteria: 2 of 3 needed for a diagnosis")
+        brand.section("Rotterdam criteria: 2 of 3 needed for a diagnosis")
         c1, c2, c3 = st.columns(3)
         c1.metric("Ovulation", "Evidence present", "6 of 9 cycles without ovulation", delta_color="off")
         c2.metric("Androgen signs", "Evidence present", "hair growth, acne, testosterone ↑", delta_color="off")
         c3.metric("Ovaries", "Unknown", "no scan yet", delta_color="off")
         st.success("Two of three areas show evidence. The assistant recommends a GP visit and has prepared a referral summary.")
     with t3:
-        st.subheader("Optional: add test results for a more confident reading")
+        brand.section("Optional: add test results for a more confident reading")
         st.dataframe(pd.DataFrame({
             "Test": ["Total testosterone", "LH : FSH ratio", "AMH", "HbA1c", "TSH (thyroid)", "Pelvic ultrasound"],
             "Result": ["2.9 nmol/L", "2.6", "8.1 ng/mL", "39 mmol/mol", "1.8 mU/L", "not done"],
@@ -388,13 +376,13 @@ def vision():
         }), hide_index=True, width="stretch")
         st.caption("Illustrative values. In the vision, labs are read from a photo or health record with the user's consent.")
     with t4:
-        st.subheader("Shared with Dr. Murphy (with Sarah's consent)")
+        brand.section("Shared with Dr. Murphy (with Sarah's consent)")
         st.markdown("- 9-month cycle chart and ovulation evidence\n- Symptom history with dates\n"
                     "- Score trend with uncertainty\n- Suggested workup: androgens, LH/FSH, AMH, glucose/insulin, "
                     "thyroid, prolactin, pelvic ultrasound\n- Clinician feedback (diagnosis yes/no) returns to the model "
                     "as a label, with consent, so it keeps improving")
     st.divider()
-    st.subheader("What has to be true to build this")
+    brand.section("What has to be true to build this")
     st.markdown("1. Wearable + symptoms + confirmed diagnosis **from the same people**, followed for 6-12 months\n"
                 "2. A diverse cohort (today's check-in model learned from one hospital group in Kerala, India)\n"
                 "3. An ovulation detector that passes validation against hormone tests\n"
