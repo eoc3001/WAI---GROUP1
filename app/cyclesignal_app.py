@@ -29,7 +29,14 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))     # repo root, for agent/
 
+# A process that ran the old layout can still hold app/agent.py as the module "agent";
+# drop it so the agent/ package below is imported instead.
+_stale = sys.modules.get("agent")
+if _stale is not None and not hasattr(_stale, "__path__"):
+    del sys.modules["agent"]
+
 import brand  # noqa: E402
+import legal  # noqa: E402
 import security  # noqa: E402
 from agent import resources  # noqa: E402
 from agent.assistant import OfflineAgent, make_agent  # noqa: E402
@@ -143,7 +150,7 @@ def prototype():
     model, explainer, metrics = get_model()
     p = PERSONAS[st.session_state.persona]
 
-    brand.topbar("Prototype · not a diagnosis",
+    brand.topbar("Prototype. Not a diagnosis.",
                  "AI powered cycle tracking for earlier PCOS risk awareness. "
                  "Notice the pattern, understand why, and take it to a GP.")
 
@@ -226,7 +233,7 @@ def prototype():
         brand.drivers([{"label": r.label, "answer": answer_text(r.feature, r.value),
                         "points": float(r.symptom_points), "quirk": bool(r.counterintuitive)}
                        for r in reading["drivers"].itertuples()])
-        st.caption("Faded rows marked “data quirk” move the score in a direction that reflects the training data, "
+        st.caption("Faded rows marked \"data quirk\" move the score in a direction that reflects the training data, "
                    "not medical knowledge. " + score["warning"])
 
     # ----- 4. assistant
@@ -328,10 +335,11 @@ def prototype():
         st.write(f"ROC-AUC {metrics['roc_auc']:.2f} · recall {metrics['recall']:.2f} · precision {metrics['precision']:.2f}")
         st.caption("Combined score weights (40/60) and bands are project heuristics, not clinically validated.")
     brand.footer()
+    legal.links("prototype")
 
 
 def vision():
-    brand.topbar("Concept · illustrative data", "What CycleSignal could do with the right data, from the right people.",
+    brand.topbar("Concept with illustrative data", "What CycleSignal could do with the right data, from the right people.",
                  concept=True)
     st.warning("**Concept, illustrative data only.** These screens show what CycleSignal could do once it is "
                "trained and validated on wearable, symptom and diagnosis data from the same people. "
@@ -389,6 +397,7 @@ def vision():
                 "4. Calibration and a clinical study before any likelihood is shown\n"
                 "5. Medical-device regulatory review (EU MDR) and GDPR-grade handling of health data")
     brand.footer()
+    legal.links("vision")
 
 
 if mode == "Prototype (today)":

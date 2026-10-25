@@ -47,7 +47,6 @@ a { color: var(--raspberry); text-decoration-color: rgba(168, 51, 106, 0.35); te
 .masthead { max-width: 1040px; margin: 0 auto; padding: 64px 20px 8px; }
 .kicker { display: flex; align-items: center; gap: 10px; color: var(--raspberry); font-weight: 700; font-size: 13px;
   letter-spacing: 0.1em; text-transform: uppercase; }
-.kicker:before { content: ""; width: 28px; height: 2px; background: var(--raspberry); }
 .masthead h1 { font-family: var(--serif); font-weight: 600; color: var(--ink); font-size: clamp(44px, 7vw, 76px);
   line-height: 1; letter-spacing: -0.02em; margin: 18px 0 14px; font-optical-sizing: auto; }
 .masthead .dek { font-family: var(--serif); font-weight: 400; color: var(--ink); font-size: clamp(21px, 2.8vw, 28px);
@@ -118,7 +117,6 @@ a { color: var(--raspberry); text-decoration-color: rgba(168, 51, 106, 0.35); te
   body { font-size: 16.5px; }
   .masthead { padding-top: 40px; }
   .nav-brand small, .nav .btn-small { display: none; }
-  .kicker:before { display: none; }
   .kicker { font-size: 12px; letter-spacing: 0.08em; }
   .prose h2 { font-size: 28px; margin-top: 56px; }
 }
