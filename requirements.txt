@@ -6,7 +6,6 @@ joblib>=1.3
 xgboost
 matplotlib
 shap
-artifact-tool
 streamlit>=1.50
 altair>=5
 anthropic

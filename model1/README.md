@@ -19,10 +19,13 @@ Before your first commit (inside the Git repository):
 
     nbstripout --install            # clears notebook outputs automatically when you commit
 
-## Run
-    python model1/ build_daily_table.py --raw data/mcphases --inspect     # check real headers first
-    python model1/ build_daily_table.py --raw data/mcphases --out data/daily.csv
-    python model1_pipeline_v6.py --data data/daily.csv --repeats 5 --out results/model1_results.json
+## Run (from the repository root)
+    python model1/build_daily_table.py --raw data/mcphases --inspect      # check real headers first
+    python model1/build_daily_table.py --raw data/mcphases --out data/daily.csv
+    python model1/model1_pipeline_v6.py                                   # settings are at the top of the file
+
+Summary results are saved to `model1/results/`. Per-person files (`data/daily.csv`,
+`data/cycle_handoff_v6.csv`) stay on your laptop; `data/` is blocked from git.
 
 
 ## Model

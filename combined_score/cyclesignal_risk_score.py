@@ -27,7 +27,7 @@ FEATURES = (
     "Hair loss", "Pimples", "Fast food", "Reg.Exercise",
 )
 BINARY_FEATURES = FEATURES[4:]
-DATA_PATH = Path("data/processed/pcos_model2_selected_features.csv")
+DATA_PATH = Path("model2/data/pcos_model2_selected_features.csv")
 WARNING = (
     "Prototype risk-awareness score only: not a probability of disease or "
     "a diagnosis. The 40/60 weights and bands are illustrative, not learned or clinically validated. Model 2 already includes cycle inputs, so cycle information overlaps. "
@@ -129,7 +129,7 @@ def train_and_evaluate_model2(
 ) -> tuple[Pipeline, dict]:
     """Train the final eleven-feature Extra Trees pipeline and evaluate it.
 
-    Preprocessing and classifier settings match src/build_pcos_model2.py.
+    Preprocessing and classifier settings match model2/build_pcos_model2.py.
     Missing targets, nonnumeric predictors and invalid binary codes fail fast.
     No tuning is performed on the test set. This evaluates Model 2 only;
     the combined longitudinal score requires separate external validation.
@@ -366,7 +366,7 @@ def calculate_simulated_combined_scores(
 def canonical_model2_evaluation(repo_root: str | Path) -> dict:
     """Read the saved final benchmark for comparison with a fresh evaluation."""
     root = Path(repo_root)
-    benchmark = pd.read_csv(root / "results/metrics/four_model_benchmark.csv")
+    benchmark = pd.read_csv(root / "model2/results/metrics/four_model_benchmark.csv")
     rows = benchmark.loc[benchmark["Model"] == "Extra Trees"]
     if len(rows) != 1:
         raise ValueError("Expected exactly one final Extra Trees benchmark row.")
@@ -386,7 +386,7 @@ def canonical_model2_evaluation(repo_root: str | Path) -> dict:
         "f1": float(row["Test F1"]),
         "roc_auc": float(row["Test ROC-AUC"]),
         "confusion_matrix_labels_0_1": [[tn, fp], [fn, tp]],
-        "scope": "Canonical final 11-feature Extra Trees held-out evaluation at threshold 0.5; source: results/metrics/four_model_benchmark.csv. The demo now uses the same eleven-feature pipeline. Combined score and 40/60 weights are not validated; cycle information overlaps between components.",
+        "scope": "Canonical final 11-feature Extra Trees held-out evaluation at threshold 0.5; source: model2/results/metrics/four_model_benchmark.csv. The demo now uses the same eleven-feature pipeline. Combined score and 40/60 weights are not validated; cycle information overlaps between components.",
     }
 
 
@@ -398,7 +398,7 @@ def save_simulated_scores_json(simulation: dict, evaluation: dict,
     working directory. Re-running replaces the previous demo export.
     """
     root = Path(repo_root).resolve()
-    destination = Path(output_path) if output_path is not None else Path("results/cyclesignal_demo_scores.json")
+    destination = Path(output_path) if output_path is not None else Path("combined_score/results/cyclesignal_demo_scores.json")
     if not destination.is_absolute():
         destination = root / destination
     document = dict(simulation)
@@ -477,7 +477,7 @@ if __name__ == "__main__":
     parser.add_argument("--interactive", action="store_true", help="Enter same-person symptom inputs instead of the default simulation")
     parser.add_argument("--demo-count", type=int, help="Number of simulated profiles; default: all Model 1 rows")
     parser.add_argument("--seed", type=int, default=42, help="Reproducible simulation pairing seed")
-    parser.add_argument("--output-json", type=Path, help="Demo export path; default: results/cyclesignal_demo_scores.json, relative to repository")
+    parser.add_argument("--output-json", type=Path, help="Demo export path; default: combined_score/results/cyclesignal_demo_scores.json, relative to repository")
     args = parser.parse_args()
     print(WARNING)
     try:
