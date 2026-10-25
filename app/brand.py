@@ -97,9 +97,10 @@ input, textarea, [data-baseweb="select"] div { font-size: 16px !important; }
 .cs-brand { display: flex; align-items: center; gap: 10px; }
 .cs-brand img { width: 34px; height: 34px; }
 .cs-brand b { font-size: 22px; color: var(--ink); letter-spacing: -0.01em; }
-.cs-pill { font-size: 12.5px; font-weight: 700; color: var(--raspberry); background: #fff; border: 1px solid var(--line);
-  border-radius: 999px; padding: 5px 12px; white-space: nowrap; }
-.cs-pill.concept { color: #8a5a00; background: #fff7e6; border-color: #f3dfb5; }
+.cs-status { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.cs-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--raspberry); }
+.cs-status.concept { color: #7a5200; }
+.cs-status.concept i { background: #d9a520; }
 .cs-lede { color: var(--muted); font-size: 15.5px; margin: 2px 0 18px 0; max-width: 680px; }
 
 /* Score card */
@@ -166,11 +167,11 @@ def _icon_data_uri() -> str:
     return "data:image/svg+xml;utf8," + quote((LOGO_DIR / "1-cycle-pulse-icon.svg").read_text().strip())
 
 
-def topbar(pill: str, lede: str, concept: bool = False) -> None:
-    """Slim header: logo, name, a status pill that keeps the disclaimer visible, one line of context."""
+def topbar(status: str, lede: str, concept: bool = False) -> None:
+    """Slim header: logo, name, a plain status line that keeps the disclaimer visible, one line of context."""
     st.markdown(
         f"<div class='cs-top'><div class='cs-brand'><img src='{_icon_data_uri()}' alt=''><b>CycleSignal</b></div>"
-        f"<span class='cs-pill{' concept' if concept else ''}'>{escape(pill)}</span></div>"
+        f"<span class='cs-status{' concept' if concept else ''}'><i></i>{escape(status)}</span></div>"
         f"<div class='cs-lede'>{escape(lede)}</div>", unsafe_allow_html=True)
 
 

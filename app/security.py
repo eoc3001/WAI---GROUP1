@@ -123,6 +123,9 @@ _URL = re.compile(r"(?:https?://|www\.)\S+")
 
 
 def clean_answer(text: str) -> str:
-    """Remove any links from model output; trusted links are added by the app instead."""
+    """Remove any links from model output (trusted links are added by the app instead),
+    and swap em and en dashes for plain punctuation."""
     text = _LINK.sub(r"\1", text)
-    return _URL.sub("", text)
+    text = _URL.sub("", text)
+    text = re.sub(r"\s*—\s*", ", ", text)
+    return text.replace("–", "-")
