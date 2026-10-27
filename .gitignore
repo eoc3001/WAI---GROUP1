@@ -1,6 +1,5 @@
 # --- Data: never commit raw mcPHASES files or per-person tables ---
 data/*
-!data/processed/
 *.parquet
 *.xlsx
 # Model files stay local until a supervisor agrees they can be shared
@@ -16,3 +15,7 @@ venv/
 .DS_Store
 .vscode/
 .claude/settings.local.json
+
+# --- Secrets: never commit ---
+**/.streamlit/secrets.toml
+*.key

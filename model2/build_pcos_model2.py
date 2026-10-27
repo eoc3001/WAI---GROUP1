@@ -1,9 +1,9 @@
 # WAI PCOS Model 2 — Four-model pipeline
 # Models: Logistic Regression, Random Forest, XGBoost, Extra Trees
-# Input: data/processed/pcos_model2_selected_features.csv
-# Outputs:
-#   results/metrics/*.csv
-#   results/figures/*.png
+# Input: model2/data/pcos_model2_selected_features.csv
+# Outputs (next to this script):
+#   model2/results/metrics/*.csv
+#   model2/results/figures/*.png
 
 from pathlib import Path
 import os
@@ -36,12 +36,13 @@ from sklearn.metrics import (
 # -------------------------------------------------------------------
 
 # Expected location:
-#   WAI_PCOS_Project/src/build_pcos_model2.py
+#   WAI---GROUP1/model2/build_pcos_model2.py
 REPO_ROOT = Path(__file__).resolve().parents[1]
+MODEL2_DIR = Path(__file__).resolve().parent
 
-DATA_PATH = REPO_ROOT / "data" / "processed" / "pcos_model2_selected_features.csv"
-METRICS_DIR = REPO_ROOT / "results" / "metrics"
-FIGURES_DIR = REPO_ROOT / "results" / "figures"
+DATA_PATH = MODEL2_DIR / "data" / "pcos_model2_selected_features.csv"
+METRICS_DIR = MODEL2_DIR / "results" / "metrics"
+FIGURES_DIR = MODEL2_DIR / "results" / "figures"
 
 METRICS_DIR.mkdir(parents=True, exist_ok=True)
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)

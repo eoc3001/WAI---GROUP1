@@ -278,7 +278,6 @@ A clinically useful version would require:
 - **Anuja Thuraiyur Jayakumar** · [LinkedIn](https://www.linkedin.com/in/anuja-jayakumar-datascience001/) · [GitHub](https://github.com/anujatj0011)
 - **Fiona Edocket** · [LinkedIn](https://www.linkedin.com/in/fionaedocket) · [GitHub](https://github.com/f-ayanae)
 - **Ling Tsai** · [LinkedIn](https://www.linkedin.com/in/yltsai/) · [GitHub](https://github.com/ling0110)
-- **Namasiku Samunzala**
 
 ---
 

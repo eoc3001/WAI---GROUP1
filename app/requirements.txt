@@ -1,0 +1,7 @@
+numpy>=1.26
+pandas>=2.0
+scikit-learn>=1.4
+shap
+streamlit>=1.50
+altair>=5
+anthropic
