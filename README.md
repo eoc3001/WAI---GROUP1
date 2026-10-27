@@ -23,7 +23,7 @@ The output for the user: an indication of where they are in their cycle, plus a 
 ## Links
 
 - **Project blog:** https://eoc3001.github.io/WAI---GROUP1/
-- **Demo app:** https://wai---group1-iwvd7wox6mmmbwhs2kxkyd.streamlit.app/ (password on request)
+- **Demo app:** https://cyclesignal-wai.streamlit.app/ (password on request)
 
 ## Repository structure
 
