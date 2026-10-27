@@ -6,7 +6,7 @@ CycleSignal is a Women in AI Ireland group project exploring whether everyday cy
 
 > **CycleSignal is a risk-awareness prototype, not a diagnostic tool or medical device.**
 
-[Live App](https://wai---group1-iwvd7wox6mmmbwhs2kxkyd.streamlit.app/) · [Project Blog](https://f-ayanae.github.io/WAI---GROUP1/) · [Source Code](https://github.com/eoc3001/WAI---GROUP1)
+[Live App](https://cyclesignal-wai.streamlit.app/) · [Project Blog](https://f-ayanae.github.io/WAI---GROUP1/) · [Source Code](https://github.com/eoc3001/WAI---GROUP1)
 
 ---
 
@@ -163,7 +163,7 @@ The app includes:
 
 Wearable nights displayed in the prototype are simulated in the shape of the mcPHASES data. Model outputs, cycle rules and SHAP calculations are produced by the project code.
 
-[Open the CycleSignal app](https://wai---group1-iwvd7wox6mmmbwhs2kxkyd.streamlit.app/)
+[Open the CycleSignal app](https://cyclesignal-wai.streamlit.app/)
 
 ---
 
@@ -258,7 +258,7 @@ A clinically useful version would require:
 
 ## Project links
 
-- **Live app:** https://wai---group1-iwvd7wox6mmmbwhs2kxkyd.streamlit.app/
+- **Live app:** https://cyclesignal-wai.streamlit.app/
 - **Project blog:** https://f-ayanae.github.io/WAI---GROUP1/
 - **GitHub repository:** https://github.com/eoc3001/WAI---GROUP1
 - **Model 1:** [`model1/`](model1/)

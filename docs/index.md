@@ -20,7 +20,7 @@ title: CycleSignal · Women in AI Ireland
   </div>
   </div>
   <div class="cta">
-    <a class="btn btn-primary" href="https://wai---group1-iwvd7wox6mmmbwhs2kxkyd.streamlit.app/">Open the app ↗</a>
+    <a class="btn btn-primary" href="https://cyclesignal-wai.streamlit.app/">Open the app ↗</a>
     <a class="btn" href="https://github.com/eoc3001/WAI---GROUP1">Read the code</a>
     <!-- Add when the video is uploaded: <a class="btn" href="VIDEO-LINK">Watch the video</a> -->
   </div>
